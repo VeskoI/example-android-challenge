@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">RailsExplorer</string>
+
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+    <string name="no_items_to_show">No items to show ...</string>
+</resources>
