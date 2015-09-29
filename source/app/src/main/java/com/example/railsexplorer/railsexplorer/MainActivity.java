@@ -1,6 +1,6 @@
 package com.example.railsexplorer.railsexplorer;
 
-import android.os.AsyncTask;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -10,22 +10,14 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 
-import com.example.railsexplorer.railsexplorer.model.CommitEntry;
-import com.google.gson.Gson;
-import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.Response;
+import com.squareup.otto.Subscribe;
 
-import java.io.IOException;
 import java.util.Arrays;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
 
 public class MainActivity extends AppCompatActivity {
-
-    private final OkHttpClient okHttpClient = new OkHttpClient();
-    private final Gson gson = new Gson();
 
     @Bind(R.id.recycler_view)
     RecyclerView mRecyclerView;
@@ -41,42 +33,32 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         ButterKnife.bind(this);
+        ((RailsExplorerApp)getApplication()).getBus().register(this);
 
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this);
         mRecyclerView.setLayoutManager(layoutManager);
         mAdapter = new CommitsAdapter();
         mRecyclerView.setAdapter(mAdapter);
 
-        new GetCommitsTask().execute();
+        startService(new Intent(this, GitHubService.class));
     }
 
-    private class GetCommitsTask extends AsyncTask<Void, Void, String> {
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        ((RailsExplorerApp)getApplication()).getBus().unregister(this);
+    }
 
-        @Override
-        protected String doInBackground(Void... params) {
-            Request request = new Request.Builder()
-                    .url("https://api.github.com/repos/rails/rails/commits")
-                    .build();
-
-            try {
-                Response response = okHttpClient.newCall(request).execute();
-                return response.body().string();
-            } catch (IOException e) {
-                return e.getMessage();
-            }
-        }
-
-        @Override
-        protected void onPostExecute(String s) {
-            super.onPostExecute(s);
-            try {
-                CommitEntry[] commitEntries = gson.fromJson(s, CommitEntry[].class);
-                mAdapter.setItems(Arrays.asList(commitEntries));
-                mEmptyView.setVisibility(View.GONE);
-            } catch (Exception e) {
-                mRecyclerView.setVisibility(View.GONE);
-                mEmptyView.setText(e.getMessage());
-            }
+    @Subscribe
+    @SuppressWarnings("unused")
+    public void messageReceived(CommitObjectMessage result) {
+        if (result.entries == null) {
+            mRecyclerView.setVisibility(View.GONE);
+            mEmptyView.setVisibility(View.VISIBLE);
+        } else {
+            mEmptyView.setVisibility(View.GONE);
+            mRecyclerView.setVisibility(View.VISIBLE);
+            mAdapter.setItems(Arrays.asList(result.entries));
         }
     }
 
