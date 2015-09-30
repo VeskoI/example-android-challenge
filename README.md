@@ -1,12 +1,20 @@
-## Android Programming Task
+## Welcome ##
+
+This is my solution to [Donn Felker's Android Programming Challenge](https://github.com/donnfelker/example-android-challenge). Far from perfect, but a good starting point.
+
+To see the task itself, please read on ...
+
+
+
+
+### Android Programming Task
 
 In order to be considered for the Android position, you mush complete the following steps. 
 
 *Note: This task should take no longer than 1-2 hours at the most.*
 
 
-
-### Prerequisites
+#### Prerequisites
 
 - Please note that this will require some basic [Java](http://heather.cs.ucdavis.edu/~matloff/Java/JavaIntro.html) and [Android](http://d.android.com) knowledge. 
 
@@ -14,7 +22,7 @@ In order to be considered for the Android position, you mush complete the follow
 
 - You will need to have [Java](http://www.java.com/en/download/), [Android Studio](http://developer.android.com/sdk/installing/studio.html) or [IntelliJ](http://www.jetbrains.com/idea/download/), and the [Android SDK](http://d.android.com/sdk/index.html) installed.
 
-## Task
+### Task
 
 1. Fork this repository (if you don't know how to do that, Google is your friend)
 2. Create a *source* folder to contain your code. 
