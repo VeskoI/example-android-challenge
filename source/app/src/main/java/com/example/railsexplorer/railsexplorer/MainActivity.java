@@ -12,8 +12,6 @@ import android.widget.TextView;
 
 import com.squareup.otto.Subscribe;
 
-import java.util.Arrays;
-
 import butterknife.Bind;
 import butterknife.ButterKnife;
 
@@ -58,7 +56,7 @@ public class MainActivity extends AppCompatActivity {
         } else {
             mEmptyView.setVisibility(View.GONE);
             mRecyclerView.setVisibility(View.VISIBLE);
-            mAdapter.setItems(Arrays.asList(result.entries));
+            mAdapter.setItems(result.entries);
         }
     }
 
