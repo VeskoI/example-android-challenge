@@ -1,19 +1,26 @@
 package com.example.railsexplorer.railsexplorer;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 
-import com.squareup.otto.Subscribe;
+import com.example.railsexplorer.railsexplorer.model.CommitEntry;
+
+import java.util.List;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
+import retrofit.Call;
+import retrofit.Callback;
+import retrofit.MoshiConverterFactory;
+import retrofit.Response;
+import retrofit.Retrofit;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -31,33 +38,33 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         ButterKnife.bind(this);
-        ((RailsExplorerApp)getApplication()).getBus().register(this);
 
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this);
         mRecyclerView.setLayoutManager(layoutManager);
         mAdapter = new CommitsAdapter();
         mRecyclerView.setAdapter(mAdapter);
 
-        startService(new Intent(this, GitHubService.class));
-    }
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("https://api.github.com")
+                .addConverterFactory(MoshiConverterFactory.create())
+                .build();
+        GHService service = retrofit.create(GHService.class);
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        ((RailsExplorerApp)getApplication()).getBus().unregister(this);
-    }
+        Call<List<CommitEntry>> call = service.getRailsCommits();
+        call.enqueue(new Callback<List<CommitEntry>>() {
+            @Override
+            public void onResponse(Response<List<CommitEntry>> response, Retrofit retrofit) {
+                Log.d("vesko", "onResponse, " + response.toString());
+                onItemsRetrieved(Utils.ensureOneCommitPerAuthor(response.body()));
+            }
 
-    @Subscribe
-    @SuppressWarnings("unused")
-    public void messageReceived(CommitObjectMessage result) {
-        if (result.entries == null) {
-            mRecyclerView.setVisibility(View.GONE);
-            mEmptyView.setVisibility(View.VISIBLE);
-        } else {
-            mEmptyView.setVisibility(View.GONE);
-            mRecyclerView.setVisibility(View.VISIBLE);
-            mAdapter.setItems(result.entries);
-        }
+            @Override
+            public void onFailure(Throwable t) {
+                Log.d("vesko", "onFailure, " + t.getMessage());
+                onItemsRetrieved(null);
+            }
+        });
+
     }
 
     @Override
@@ -80,5 +87,16 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void onItemsRetrieved(List<CommitEntry> entries) {
+        if (entries == null || entries.isEmpty()) {
+            mRecyclerView.setVisibility(View.GONE);
+            mEmptyView.setVisibility(View.VISIBLE);
+        } else {
+            mEmptyView.setVisibility(View.GONE);
+            mRecyclerView.setVisibility(View.VISIBLE);
+            mAdapter.setItems(entries);
+        }
     }
 }
