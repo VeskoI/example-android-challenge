@@ -4,7 +4,6 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -14,11 +13,12 @@ import com.example.railsexplorer.railsexplorer.model.CommitEntry;
 
 import java.util.List;
 
+import javax.inject.Inject;
+
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import retrofit.Call;
 import retrofit.Callback;
-import retrofit.MoshiConverterFactory;
 import retrofit.Response;
 import retrofit.Retrofit;
 
@@ -30,6 +30,9 @@ public class MainActivity extends AppCompatActivity {
     @Bind(R.id.empty_view)
     TextView mEmptyView;
 
+    @Inject
+    GitHubService service;
+
     private CommitsAdapter mAdapter;
 
     @Override
@@ -37,6 +40,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        ((RailsExplorerApp)getApplication()).inject(this);
         ButterKnife.bind(this);
 
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this);
@@ -44,23 +48,15 @@ public class MainActivity extends AppCompatActivity {
         mAdapter = new CommitsAdapter();
         mRecyclerView.setAdapter(mAdapter);
 
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("https://api.github.com")
-                .addConverterFactory(MoshiConverterFactory.create())
-                .build();
-        GHService service = retrofit.create(GHService.class);
-
         Call<List<CommitEntry>> call = service.getRailsCommits();
         call.enqueue(new Callback<List<CommitEntry>>() {
             @Override
             public void onResponse(Response<List<CommitEntry>> response, Retrofit retrofit) {
-                Log.d("vesko", "onResponse, " + response.toString());
                 onItemsRetrieved(Utils.ensureOneCommitPerAuthor(response.body()));
             }
 
             @Override
             public void onFailure(Throwable t) {
-                Log.d("vesko", "onFailure, " + t.getMessage());
                 onItemsRetrieved(null);
             }
         });

@@ -7,7 +7,8 @@ import java.util.List;
 import retrofit.Call;
 import retrofit.http.GET;
 
-public interface GHService {
+public interface GitHubService {
+
     @GET("/repos/rails/rails/commits")
     Call<List<CommitEntry>> getRailsCommits();
 }
